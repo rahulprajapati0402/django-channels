@@ -31,13 +31,18 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    # ====================
+    "daphne",
+    # ====================
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # system apps
     "home",
+    # other apps
 ]
 
 MIDDLEWARE = [
@@ -55,7 +60,7 @@ ROOT_URLCONF = "websocket_project.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": ["templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -68,7 +73,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "websocket_project.wsgi.application"
+# WSGI_APPLICATION = "websocket_project.wsgi.application"
+ASGI_APPLICATION = "websocket_project.asgi.application"
 
 
 # Database
