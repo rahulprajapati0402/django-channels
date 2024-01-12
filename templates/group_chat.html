@@ -8,27 +8,27 @@
 </head>
 
 <body>
-    {% comment %} <h1>Count page</h1>
+    <h1>Group Name : {{group_name}}</h1>
 
-    <h2 id="ct"></h2> {% endcomment %}
 
     <textarea id="chat-log" cols="100" rows="20"></textarea><br>
 
     <input type="text" id="chat-message-input" size="100"><br><br>
     <input type="button" value="Send" id="chat-message-submit">
 
+    {{group_name|json_script:"group-name"}}
     <script>
-        var ws = new WebSocket("ws://127.0.0.1:8000/ws/ac/")
+        const groupName = JSON.parse(document.getElementById("group-name").textContent)
+
+        var ws = new WebSocket("ws://" + window.location.host + "/ws/sc/" + groupName + "/")
 
         ws.onopen = function () {
             console.log("WebSocket connection open...")
-            {% comment %} ws.send("Hii, Message from client...") {% endcomment %}
         }
 
         ws.onmessage = function (event) {
             console.log("WebSocket received from server...", event.data)
             const data = JSON.parse(event.data)
-            {% comment %} document.getElementById("ct").innerText = data.count {% endcomment %}
             document.querySelector("#chat-log").value += (data.message + "\n")
         }
 
@@ -45,21 +45,9 @@
             const message = messageInputDom.value
             ws.send(JSON.stringify({"message": message}))
             messageInputDom.value = ""
+            console.log("Data sent")
         }
 
-        {% comment %} ws.addEventListener("open", (event) => {
-            console.log("WebSocket connection open...", event)
-            ws.send("Hii, Message from client...")
-        })
-        ws.addEventListener("message", (event) => {
-            console.log("WebSocket received from server...", event)
-        })
-        ws.addEventListener("error", (event) => {
-            console.log("WebSocket error occured...", event)
-        })
-        ws.addEventListener("close", (event) => {
-            console.log("WebSocket connection closed...", event)
-        }) {% endcomment %}
     </script>
 </body>
 
