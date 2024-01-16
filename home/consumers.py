@@ -168,3 +168,88 @@ class MyAsyncConsumerGroup(AsyncConsumer):
         print("Websocket disconnected...", event)
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
         raise StopConsumer()
+
+
+class AuthSyncConsumer(SyncConsumer):
+    def websocket_connect(self, event):
+        print("Websocket connected...", event)
+        self.group_name = self.scope["url_route"]["kwargs"]["group_name"]
+        self.user = self.scope["user"]
+        async_to_sync(self.channel_layer.group_add)(self.group_name, self.channel_name)
+        self.send(
+            {
+                "type": "websocket.accept",
+            }
+        )
+
+    def websocket_receive(self, event):
+        if self.user.is_authenticated:
+            group = Group.objects.get(name=self.group_name)
+            data_dict = json.loads(event["text"])
+            data_dict["user"] = self.user.username
+            Chat.objects.create(group=group, content=data_dict["message"])
+            async_to_sync(self.channel_layer.group_send)(
+                self.group_name, {"type": "chat.message", "message": data_dict}
+            )
+        else:
+            self.send(
+                {
+                    "type": "websocket.send",
+                    "text": json.dumps({"message": "Login Required", "user": "guest"}),
+                }
+            )
+
+    def chat_message(self, event):
+        self.send({"type": "websocket.send", "text": json.dumps(event["message"])})
+
+    def websocket_disconnect(self, event):
+        print("Websocket disconnected...", event)
+        async_to_sync(self.channel_layer.group_discard)(
+            self.group_name, self.channel_name
+        )
+        raise StopConsumer()
+
+
+class AuthAsyncConsumer(AsyncConsumer):
+    async def websocket_connect(self, event):
+        print("Websocket connected...", event)
+        self.group_name = self.scope["url_route"]["kwargs"]["group_name"]
+        self.user = self.scope["user"]
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.send(
+            {
+                "type": "websocket.accept",
+            }
+        )
+
+    async def websocket_receive(self, event):
+        if self.user.is_authenticated:
+            group = await database_sync_to_async(Group.objects.get)(
+                name=self.group_name
+            )
+            data_dict = json.loads(event["text"])
+            data_dict["user"] = self.user.username
+            print(data_dict)
+            await database_sync_to_async(Chat.objects.create)(
+                group=group, content=data_dict["message"]
+            )
+            await self.channel_layer.group_send(
+                self.group_name, {"type": "chat.message", "message": data_dict}
+            )
+        else:
+            await self.send(
+                {
+                    "type": "websocket.send",
+                    "text": json.dumps({"message": "Login Required", "user": "guest"}),
+                }
+            )
+
+    async def chat_message(self, event):
+        await self.send(
+            {"type": "websocket.send", "text": json.dumps(event["message"])}
+        )
+
+    async def websocket_disconnect(self, event):
+        print("Websocket disconnected...", event)
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        raise StopConsumer()

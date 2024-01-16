@@ -17,3 +17,14 @@ def group_chat(request, group_name):
         Group.objects.create(name=group_name)
     context = {"group_name": group_name, "chats": chats}
     return render(request, "group_chat.html", context)
+
+
+def auth_chat(request, group_name):
+    group = Group.objects.filter(name=group_name).first()
+    chats = []
+    if group:
+        chats = Chat.objects.filter(group=group)
+    else:
+        Group.objects.create(name=group_name)
+    context = {"group_name": group_name, "chats": chats}
+    return render(request, "auth_chat.html", context)
