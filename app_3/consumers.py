@@ -40,6 +40,7 @@ class ChatJsonWebsocketConsumer(JsonWebsocketConsumer):
     def connect(self):
         self.group_name = self.scope["url_route"]["kwargs"]["group_name"]
         self.user = self.scope["user"]
+        print(self.channel_layer)
         async_to_sync(self.channel_layer.group_add)(self.group_name, self.channel_name)
         self.accept()
         # self.close()
